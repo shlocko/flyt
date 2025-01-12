@@ -1,13 +1,13 @@
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 
-export let scan = (source: string): Token[] => {
+export const scan = (source: string): Token[] => {
 	let tokens: Token[] = []
 	let current = 0
 	let start = 0
 	let line = 1
 
-	let addToken = (type: TokenType, literal?: string | number) => {
+	const addToken = (type: TokenType, literal?: string | number) => {
 		tokens.push({
 			type: type,
 			line: line,
@@ -16,17 +16,17 @@ export let scan = (source: string): Token[] => {
 		} as Token)
 	}
 
-	let isAtEnd = () => {
+	const isAtEnd = () => {
 		return current >= source.length
 	}
 
-	let consumeChar = () => {
+	const consumeChar = () => {
 		let char = source.charAt(current)
 		current++
 		return char
 	}
 
-	let isCharNumber = (char: string) => {
+	const isCharNumber = (char: string) => {
 		if (Number(char)) {
 			return true
 		} else {
@@ -34,21 +34,21 @@ export let scan = (source: string): Token[] => {
 		}
 	}
 
-	let matchNext = (expected: string) => {
+	const matchNext = (expected: string) => {
 		if (source[current] == expected)
 			return true
 		return false
 	}
 
-	let peekNext = () => {
+	const peekNext = () => {
 		return source[current]
 	}
 
-	let peekNextN = (n: number) => {
+	const peekNextN = (n: number) => {
 		return source[current + (n - 1)]
 	}
 
-	let scanNumber = () => {
+	const scanNumber = () => {
 		while (!isAtEnd() && (isCharNumber(peekNext()) || peekNext() == '.')) {
 			consumeChar()
 		}
