@@ -26,9 +26,10 @@ export const parse = (source: Token[]) => {
 
 	const matchNext = (...types: TokenType[]): boolean => {
 		for (let type of types) {
-			if (peekNext().type == type)
+			if (!isAtEnd() && peekNext().type == type) {
 				consumeNextToken()
-			return true
+				return true
+			}
 		}
 		return false
 	}
@@ -45,7 +46,7 @@ export const parse = (source: Token[]) => {
 		let expr: Expr = factor()
 		if (matchNext("PLUS", "MINUS")) {
 			let operator = previous()
-			let right = factor()
+			let right = expression()
 			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
 		}
 		return expr
@@ -53,7 +54,11 @@ export const parse = (source: Token[]) => {
 
 	const factor = (): Expr => {
 		let expr: Expr = primary()
-
+		if (matchNext("STAR", "SLASH")) {
+			let operator = previous()
+			let right = expression()
+			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
+		}
 		return expr
 	}
 
