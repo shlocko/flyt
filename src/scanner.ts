@@ -62,6 +62,9 @@ export let scan = (source: string): Token[] => {
 			case '\n': line++; break;
 			case '+': addToken("PLUS"); break;
 			case '-': addToken("MINUS"); break;
+			case '*': addToken("STAR"); break;
+			case '/': addToken("SLASH"); break;
+			case '=': addToken("EQUAL"); break;
 			default: {
 				if (isCharNumber(char)) {
 					let num = scanNumber()
