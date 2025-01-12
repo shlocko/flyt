@@ -1,0 +1,17 @@
+;; This is a comment
+struct pos<hashable, clone!, equals>{
+    x: i32,
+    y: i32,
+    clone(){
+        return pos(this.x, this.y)
+    }
+}
+
+fn main(){
+    print("Hello World")
+    let mut pos_player = pos(10, 15)
+    let pos_enemy = pos_player.clone()
+
+    print(pos_player == pos_enemy) ;; true
+    pos_enemy.x += 7 ;; this is an error, not mutable
+}
