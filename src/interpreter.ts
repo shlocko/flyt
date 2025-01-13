@@ -2,7 +2,7 @@ import { RuntimeError } from "./error";
 import type { Expr } from "./expression";
 import type { Stmt } from "./statement";
 
-export const interpret = (stmt: Stmt) => {
+export const interpret = (stmts: Stmt[]) => {
 
 	const evaluate = (expr: Expr) => {
 		switch (expr.type) {
@@ -33,5 +33,7 @@ export const interpret = (stmt: Stmt) => {
 			}
 		}
 	}
-	return execute(stmt)
+	for (let stmt of stmts) {
+		execute(stmt)
+	}
 }

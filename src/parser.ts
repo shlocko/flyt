@@ -7,6 +7,7 @@ import type { Stmt } from "./statement"
 
 export const parse = (source: Token[]) => {
 	let current = 0
+	let statements: Stmt[] = []
 
 	const isAtEnd = () => {
 		return current >= source.length
@@ -28,7 +29,8 @@ export const parse = (source: Token[]) => {
 
 	const consumeCheck = (token: TokenType, message: string) => {
 		let consumedToken = consumeNextToken()
-		if (consumedToken.type === token) return true
+		//console.log(consumedToken)
+		if (consumedToken && consumedToken.type === token) return true
 		throw new ParseError(consumedToken, message)
 	}
 
@@ -84,7 +86,7 @@ export const parse = (source: Token[]) => {
 	const statement = (): Stmt => {
 		let token = consumeNextToken()
 		switch (token.type) {
-			case "PRINT": return printStatement()
+			case "PRINTLN": return printStatement()
 		}
 		throw new ParseError(token, "Expected statement.")
 	}
@@ -97,5 +99,9 @@ export const parse = (source: Token[]) => {
 
 	}
 
-	return statement()
+	while (!isAtEnd()) {
+		statements.push(statement())
+	}
+
+	return statements
 }

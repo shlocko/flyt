@@ -9,6 +9,7 @@ export type TokenType = // Single Character tokens
 	| "RIGHTPAREN"
 	// Two Character Tokens
 	| "EQUALEQUAL"
+	| "SEMISEMI"
 	// LITERALS
 	| "NUMBER"
 	| "IDENTIFIER"

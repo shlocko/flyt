@@ -1,3 +1,4 @@
+import { LexError } from "./error"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 
@@ -81,6 +82,12 @@ export const scan = (source: string): Token[] => {
 		return keywords.has(str)
 	}
 
+	const comment = () => {
+		while (!isAtEnd() && peekNext() !== '\n') {
+			consumeChar()
+		}
+	}
+
 	while (!isAtEnd()) {
 		start = current
 		let char = consumeChar()
@@ -92,6 +99,14 @@ export const scan = (source: string): Token[] => {
 			case '-': addToken("MINUS"); break;
 			case '*': addToken("STAR"); break;
 			case '/': addToken("SLASH"); break;
+			case ';': {
+				if (peekNext() === ';') {
+					comment()
+				} else {
+					throw new LexError("", { start: start, end: current, lineNumber: line }, "Expected ';'.")
+				}
+				break
+			}
 			case '=': {
 				if (peekNext() === "=") {
 					consumeChar()
