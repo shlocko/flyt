@@ -98,6 +98,7 @@ export const parse = (source: Token[]) => {
 		switch (token.type) {
 			case "PRINTLN": return printStatement()
 			case "LET": return letStatement()
+			case "LEFTBRACE": return blockStatement()
 		}
 		current-- // we need the previously consumed token for the expression statement, so we will step back, hope this doesn't bite me later
 		return { type: "ExprStmt", expr: expression() }
@@ -121,6 +122,14 @@ export const parse = (source: Token[]) => {
 		}
 		return { type: "LetStmt", name: name }
 
+	}
+
+	const blockStatement = (): Stmt => {
+		let stmts: Stmt[] = []
+		while (!isAtEnd() && !matchNext("RIGHTBRACE")) {
+			stmts.push(statement())
+		}
+		return { type: "BlockStmt", stmts: stmts }
 	}
 
 	while (!isAtEnd()) {

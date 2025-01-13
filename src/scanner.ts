@@ -105,6 +105,8 @@ export const scan = (source: string): Token[] => {
 			case '\n': line++; break;
 			case '(': addToken("LEFTPAREN"); break;
 			case ')': addToken("RIGHTPAREN"); break;
+			case '{': addToken("LEFTBRACE"); break;
+			case '}': addToken("RIGHTBRACE"); break;
 			case '+': addToken("PLUS"); break;
 			case '-': addToken("MINUS"); break;
 			case '*': addToken("STAR"); break;

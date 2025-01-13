@@ -7,6 +7,8 @@ export type TokenType = // Single Character tokens
 	| "STAR"
 	| "LEFTPAREN"
 	| "RIGHTPAREN"
+	| "LEFTBRACE"
+	| "RIGHTBRACE"
 	// Two Character Tokens
 	| "EQUALEQUAL"
 	| "SEMISEMI"

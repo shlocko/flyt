@@ -55,6 +55,16 @@ export const interpret = (stmts: Stmt[]) => {
 			}
 			case "LetStmt": {
 				environment.define(stmt.name, evaluate(stmt.initializer))
+				break
+			}
+			case "BlockStmt": {
+				let prevEnv = environment
+				environment = new Environment(environment)
+				for (let st of stmt.stmts) {
+					execute(st)
+				}
+				environment = prevEnv
+				break
 			}
 		}
 	}
