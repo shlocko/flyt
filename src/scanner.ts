@@ -128,6 +128,24 @@ export const scan = (source: string): Token[] => {
 				}
 				break;
 			}
+			case '<': {
+				if (peekNext() === "=") {
+					consumeChar()
+					addToken("LESSEQUAL")
+				} else {
+					addToken("LESSTHAN")
+				}
+				break
+			}
+			case '>': {
+				if (peekNext() === '=') {
+					consumeChar()
+					addToken("GREATEREQUAL")
+				} else {
+					addToken("GREATERTHAN")
+				}
+				break
+			}
 			case '"': {
 				string()
 				break

@@ -1,5 +1,1 @@
-let test = 1
-println(test)
-{test = 2 
-println(test)}
-println(test)
+println(1==2)

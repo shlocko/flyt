@@ -9,9 +9,13 @@ export type TokenType = // Single Character tokens
 	| "RIGHTPAREN"
 	| "LEFTBRACE"
 	| "RIGHTBRACE"
+	| "LESSTHAN"
+	| "GREATERTHAN"
 	// Two Character Tokens
 	| "EQUALEQUAL"
 	| "SEMISEMI"
+	| "LESSEQUAL"
+	| "GREATEREQUAL"
 	// LITERALS
 	| "NUMBER"
 	| "IDENTIFIER"

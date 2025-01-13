@@ -53,10 +53,30 @@ export const parse = (source: Token[]) => {
 	}
 
 	const assignment = (): Expr => {
-		let expr: Expr = term()
+		let expr: Expr = equality()
 		if (matchNext("EQUAL")) {
 			let value = assignment()
 			return { type: "AssignExpr", name: (expr as VariableExpr).name, value: value }
+		}
+		return expr
+	}
+
+	const equality = (): Expr => {
+		let expr: Expr = comparison()
+		while (matchNext("EQUALEQUAL")) {
+			let operator = previous()
+			let right = equality()
+			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
+		}
+		return expr
+	}
+
+	const comparison = (): Expr => {
+		let expr: Expr = term()
+		while (matchNext("LESSTHAN", "GREATERTHAN", "LESSEQUAL", "GREATEREQUAL")) {
+			let operator = previous()
+			let right = equality()
+			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
 		}
 		return expr
 	}

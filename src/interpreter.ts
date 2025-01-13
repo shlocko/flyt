@@ -16,7 +16,6 @@ export const interpret = (stmts: Stmt[]) => {
 					case "MINUS": return left - right
 					case "SLASH": return left / right
 					case "STAR": return left * right
-					case "EQUAL": throw new RuntimeError(expr.operator, "Invalid operator");
 					case "PLUS": {
 						if (typeof left === "string" && typeof right === "string") {
 							return left + right
@@ -24,6 +23,36 @@ export const interpret = (stmts: Stmt[]) => {
 							return left + right
 						}
 						throw new RuntimeError(expr.operator, "Can not add two values of different types.")
+					}
+					case "GREATERTHAN": {
+						if (typeof left === "number" && typeof right === "number") {
+							return left > right
+						}
+						throw new RuntimeError(expr.operator, "Can only compare numbers.")
+					}
+					case "LESSTHAN": {
+						if (typeof left === "number" && typeof right === "number") {
+							return left < right
+						}
+						throw new RuntimeError(expr.operator, "Can only compare numbers.")
+					}
+					case "LESSEQUAL": {
+						if (typeof left === "number" && typeof right === "number") {
+							return left <= right
+						}
+						throw new RuntimeError(expr.operator, "Can only compare numbers.")
+					}
+					case "GREATEREQUAL": {
+						if (typeof left === "number" && typeof right === "number") {
+							return left >= right
+						}
+						throw new RuntimeError(expr.operator, "Can only compare numbers.")
+					}
+					case "EQUALEQUAL": {
+						if (typeof left === typeof right) {
+							return left === right
+						}
+						throw new RuntimeError(expr.operator, "Can only compare values of the same type.")
 					}
 				}
 				throw new RuntimeError(expr.operator, "Invalid Operator.")
@@ -68,6 +97,13 @@ export const interpret = (stmts: Stmt[]) => {
 			}
 		}
 	}
+
+	const isTruthy = (value: any) => {
+		if (value === false) return false
+		if (value === undefined) return false
+		return true
+	}
+
 	for (let stmt of stmts) {
 		execute(stmt)
 	}
