@@ -12,6 +12,7 @@ export const scan = (source: string): Token[] => {
 		["true", "TRUE"],
 		["false", "FALSE"],
 		["println", "PRINTLN"],
+		["let", "LET"],
 	])
 
 

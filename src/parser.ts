@@ -30,7 +30,7 @@ export const parse = (source: Token[]) => {
 	const consumeCheck = (token: TokenType, message: string) => {
 		let consumedToken = consumeNextToken()
 		//console.log(consumedToken)
-		if (consumedToken && consumedToken.type === token) return true
+		if (consumedToken && consumedToken.type === token) return consumedToken
 		throw new ParseError(consumedToken, message)
 	}
 
@@ -79,7 +79,9 @@ export const parse = (source: Token[]) => {
 			case "NUMBER": return { type: "LiteralExpr", value: token.literal }
 			case "TRUE": return { type: "LiteralExpr", value: true }
 			case "FALSE": return { type: "LiteralExpr", value: false }
+			case "IDENTIFIER": return { type: "VariableExpr", name: previous() }
 		}
+		console.log(token)
 		throw new ParseError(token, "Invalid token.")
 	}
 
@@ -87,7 +89,10 @@ export const parse = (source: Token[]) => {
 		let token = consumeNextToken()
 		switch (token.type) {
 			case "PRINTLN": return printStatement()
+			case "LET": return letStatement()
 		}
+		current-- // we need the previously consumed token for the expression statement, so we will step back, hope this doesn't bite me later
+		return { type: "ExprStmt", expr: expression() }
 		throw new ParseError(token, "Expected statement.")
 	}
 
@@ -96,6 +101,17 @@ export const parse = (source: Token[]) => {
 		let expr = expression()
 		consumeCheck("RIGHTPAREN", "Expected ')' after expression.")
 		return { type: "PrintStmt", expr: expr }
+
+	}
+
+	const letStatement = (): Stmt => {
+		let name = consumeCheck("IDENTIFIER", "Expected indentifier after 'let'.");
+		let initializer = null
+		if (matchNext("EQUAL")) {
+			initializer = expression()
+			return { type: "LetStmt", name: name, initializer: initializer }
+		}
+		return { type: "LetStmt", name: name }
 
 	}
 

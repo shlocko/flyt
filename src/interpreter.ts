@@ -1,8 +1,10 @@
+import { Environment } from "./environment";
 import { RuntimeError } from "./error";
 import type { Expr } from "./expression";
 import type { Stmt } from "./statement";
 
 export const interpret = (stmts: Stmt[]) => {
+	let environment = new Environment()
 
 	const evaluate = (expr: Expr) => {
 		switch (expr.type) {
@@ -17,6 +19,13 @@ export const interpret = (stmts: Stmt[]) => {
 					case "STAR": return left * right
 					case "EQUAL": throw new RuntimeError(expr.operator, "Invalid operator");
 				}
+				throw new RuntimeError(expr.operator, "Invalid Operator.")
+			}
+			case "VariableExpr": {
+				if (environment.has(expr.name)) {
+					return environment.get(expr.name)
+				}
+				return new RuntimeError(expr.name, "Variable '" + expr.name.lexeme + "' is not defined.")
 			}
 		}
 	}
@@ -30,6 +39,9 @@ export const interpret = (stmts: Stmt[]) => {
 			case "ExprStmt": {
 				evaluate(stmt.expr)
 				break;
+			}
+			case "LetStmt": {
+				environment.define(stmt.name, evaluate(stmt.initializer))
 			}
 		}
 	}

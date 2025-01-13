@@ -17,3 +17,4 @@ export type TokenType = // Single Character tokens
 	| "TRUE"
 	| "FALSE"
 	| "PRINTLN"
+	| "LET"
