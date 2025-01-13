@@ -10,7 +10,7 @@ const runFile = (scriptName: string) => {
 	try {
 		const fileContents = fs.readFileSync(filePath, 'utf8'); // Read file and store contents in a string
 		console.log("Executing: " + scriptName);
-		console.log(run(fileContents))
+		run(fileContents)
 	} catch (err) {
 		console.error('An error occurred:', err.message);
 	}

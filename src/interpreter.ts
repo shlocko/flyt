@@ -1,6 +1,8 @@
+import { RuntimeError } from "./error";
 import type { Expr } from "./expression";
+import type { Stmt } from "./statement";
 
-export const interpret = (expr: Expr) => {
+export const interpret = (stmt: Stmt) => {
 
 	const evaluate = (expr: Expr) => {
 		switch (expr.type) {
@@ -13,10 +15,23 @@ export const interpret = (expr: Expr) => {
 					case "MINUS": return left - right
 					case "SLASH": return left / right
 					case "STAR": return left * right
-					case "EQUAL": throw Error;
+					case "EQUAL": throw new RuntimeError(expr.operator, "Invalid operator");
 				}
 			}
 		}
 	}
-	return evaluate(expr)
+
+	const execute = (stmt: Stmt) => {
+		switch (stmt.type) {
+			case "PrintStmt": {
+				console.log(evaluate(stmt.expr))
+				break;
+			}
+			case "ExprStmt": {
+				evaluate(stmt.expr)
+				break;
+			}
+		}
+	}
+	return execute(stmt)
 }

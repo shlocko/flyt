@@ -5,6 +5,14 @@ export type TokenType = // Single Character tokens
 	| "MINUS"
 	| "SLASH"
 	| "STAR"
+	| "LEFTPAREN"
+	| "RIGHTPAREN"
+	// Two Character Tokens
+	| "EQUALEQUAL"
 	// LITERALS
 	| "NUMBER"
-
+	| "IDENTIFIER"
+	// KEYWORDS
+	| "TRUE"
+	| "FALSE"
+	| "PRINTLN"

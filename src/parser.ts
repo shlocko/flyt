@@ -2,6 +2,8 @@ import { peek } from "bun"
 import type { Expr } from "./expression"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
+import { ParseError } from "./error"
+import type { Stmt } from "./statement"
 
 export const parse = (source: Token[]) => {
 	let current = 0
@@ -24,6 +26,12 @@ export const parse = (source: Token[]) => {
 		return token
 	}
 
+	const consumeCheck = (token: TokenType, message: string) => {
+		let consumedToken = consumeNextToken()
+		if (consumedToken.type === token) return true
+		throw new ParseError(consumedToken, message)
+	}
+
 	const matchNext = (...types: TokenType[]): boolean => {
 		for (let type of types) {
 			if (!isAtEnd() && peekNext().type == type) {
@@ -44,9 +52,9 @@ export const parse = (source: Token[]) => {
 
 	const term = (): Expr => {
 		let expr: Expr = factor()
-		if (matchNext("PLUS", "MINUS")) {
+		while (matchNext("PLUS", "MINUS")) {
 			let operator = previous()
-			let right = expression()
+			let right = factor()
 			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
 		}
 		return expr
@@ -54,9 +62,9 @@ export const parse = (source: Token[]) => {
 
 	const factor = (): Expr => {
 		let expr: Expr = primary()
-		if (matchNext("STAR", "SLASH")) {
+		while (matchNext("STAR", "SLASH")) {
 			let operator = previous()
-			let right = expression()
+			let right = primary()
 			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
 		}
 		return expr
@@ -64,12 +72,30 @@ export const parse = (source: Token[]) => {
 
 	const primary = (): Expr => {
 		let token = consumeNextToken()
-		if (token.type == "NUMBER") {
-			return { type: "LiteralExpr", value: token.literal }
+		//console.log(token)
+		switch (token.type) {
+			case "NUMBER": return { type: "LiteralExpr", value: token.literal }
+			case "TRUE": return { type: "LiteralExpr", value: true }
+			case "FALSE": return { type: "LiteralExpr", value: false }
 		}
-
-		throw Error
+		throw new ParseError(token, "Invalid token.")
 	}
 
-	return expression()
+	const statement = (): Stmt => {
+		let token = consumeNextToken()
+		switch (token.type) {
+			case "PRINT": return printStatement()
+		}
+		throw new ParseError(token, "Expected statement.")
+	}
+
+	const printStatement = (): Stmt => {
+		consumeCheck("LEFTPAREN", "Expected '(' after 'print'.")
+		let expr = expression()
+		consumeCheck("RIGHTPAREN", "Expected ')' after expression.")
+		return { type: "PrintStmt", expr: expr }
+
+	}
+
+	return statement()
 }
