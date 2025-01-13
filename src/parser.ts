@@ -1,5 +1,5 @@
 import { peek } from "bun"
-import type { Expr } from "./expression"
+import type { Expr, VariableExpr } from "./expression"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
@@ -49,7 +49,16 @@ export const parse = (source: Token[]) => {
 	}
 
 	const expression = (): Expr => {
-		return term()
+		return assignment()
+	}
+
+	const assignment = (): Expr => {
+		let expr: Expr = term()
+		if (matchNext("EQUAL")) {
+			let value = assignment()
+			return { type: "AssignExpr", name: (expr as VariableExpr).name, value: value }
+		}
+		return expr
 	}
 
 	const term = (): Expr => {
@@ -74,7 +83,6 @@ export const parse = (source: Token[]) => {
 
 	const primary = (): Expr => {
 		let token = consumeNextToken()
-		//console.log(token)
 		switch (token.type) {
 			case "NUMBER": return { type: "LiteralExpr", value: token.literal }
 			case "TRUE": return { type: "LiteralExpr", value: true }

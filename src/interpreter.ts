@@ -34,6 +34,12 @@ export const interpret = (stmts: Stmt[]) => {
 				}
 				return new RuntimeError(expr.name, "Variable '" + expr.name.lexeme + "' is not defined.")
 			}
+			case "AssignExpr": {
+				if (environment.has(expr.name)) {
+					environment.assign(expr.name, evaluate(expr.value))
+					return environment.get(expr.name)
+				}
+			}
 		}
 	}
 
