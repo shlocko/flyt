@@ -13,11 +13,18 @@ export const interpret = (stmts: Stmt[]) => {
 				let left: number = evaluate(expr.left)
 				let right: number = evaluate(expr.right)
 				switch (expr.operator.type) {
-					case "PLUS": return left + right
 					case "MINUS": return left - right
 					case "SLASH": return left / right
 					case "STAR": return left * right
 					case "EQUAL": throw new RuntimeError(expr.operator, "Invalid operator");
+					case "PLUS": {
+						if (typeof left === "string" && typeof right === "string") {
+							return left + right
+						} else if (typeof left === "number" && typeof right === "number") {
+							return left + right
+						}
+						throw new RuntimeError(expr.operator, "Can not add two values of different types.")
+					}
 				}
 				throw new RuntimeError(expr.operator, "Invalid Operator.")
 			}

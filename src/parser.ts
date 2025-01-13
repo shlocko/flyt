@@ -80,8 +80,8 @@ export const parse = (source: Token[]) => {
 			case "TRUE": return { type: "LiteralExpr", value: true }
 			case "FALSE": return { type: "LiteralExpr", value: false }
 			case "IDENTIFIER": return { type: "VariableExpr", name: previous() }
+			case "STRING": return { type: "LiteralExpr", value: token.literal }
 		}
-		console.log(token)
 		throw new ParseError(token, "Invalid token.")
 	}
 

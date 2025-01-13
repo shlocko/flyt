@@ -4,3 +4,5 @@ println(1+8*7/3)
 1+2
 let test = 12*7
 println(test)
+let foo = "Hello"
+println(foo + " World!")

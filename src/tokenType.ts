@@ -13,6 +13,7 @@ export type TokenType = // Single Character tokens
 	// LITERALS
 	| "NUMBER"
 	| "IDENTIFIER"
+	| "STRING"
 	// KEYWORDS
 	| "TRUE"
 	| "FALSE"

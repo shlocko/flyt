@@ -89,6 +89,15 @@ export const scan = (source: string): Token[] => {
 		}
 	}
 
+	const string = () => {
+		while (!isAtEnd() && peekNext() !== '"') {
+			consumeChar()
+		}
+		let str = source.substring(start + 1, current)
+		consumeChar()
+		addToken("STRING", str)
+	}
+
 	while (!isAtEnd()) {
 		start = current
 		let char = consumeChar()
@@ -116,6 +125,10 @@ export const scan = (source: string): Token[] => {
 					addToken("EQUAL");
 				}
 				break;
+			}
+			case '"': {
+				string()
+				break
 			}
 			default: {
 				if (isCharNumber(char)) {
