@@ -3,6 +3,7 @@ import path from "node:path";
 import { scan } from "./scanner";
 import { parse } from "./parser";
 import { interpret } from "./interpreter";
+import { LexError, ParseError, RuntimeError } from "./error";
 
 const runFile = (scriptName: string) => {
 	const filePath = path.join(__dirname, scriptName);
@@ -17,7 +18,23 @@ const runFile = (scriptName: string) => {
 }
 
 export const run = (source: any) => {
-	return interpret(parse(scan(source)))
+	let tokens
+	try {
+		tokens = scan(source)
+		return interpret(parse(tokens))
+	} catch (err) {
+		if (err instanceof LexError) {
+			console.error("An error occurred at line " + err.position.lineNumber + ": " + err.message)
+		} else if (err instanceof ParseError) {
+			console.error("An error occurred at line " + err.token.line + ": " + err.message)
+		} else if (err instanceof RuntimeError) {
+			console.error("An error occurred at line " + err.token.line + ": " + err.message)
+		} else {
+			console.error(err)
+		}
+
+
+	}
 }
 
 const main = () => {

@@ -1,1 +1,9 @@
-println(1==2)
+let i = 0
+while i < 10 {
+	if i // 2 == i / 2 {
+		println(i)
+	}
+	i = i + 1
+}
+println(3//2)
+println(3/2)

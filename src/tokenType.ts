@@ -11,11 +11,14 @@ export type TokenType = // Single Character tokens
 	| "RIGHTBRACE"
 	| "LESSTHAN"
 	| "GREATERTHAN"
+	| "BANG"
 	// Two Character Tokens
 	| "EQUALEQUAL"
 	| "SEMISEMI"
 	| "LESSEQUAL"
 	| "GREATEREQUAL"
+	| "BANGEQUAL"
+	| "SLASHSLASH"
 	// LITERALS
 	| "NUMBER"
 	| "IDENTIFIER"
@@ -24,4 +27,8 @@ export type TokenType = // Single Character tokens
 	| "TRUE"
 	| "FALSE"
 	| "PRINTLN"
+	| "PRINT"
 	| "LET"
+	| "IF"
+	| "ELSE"
+	| "WHILE"

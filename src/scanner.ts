@@ -1,3 +1,4 @@
+import { peek } from "bun"
 import { LexError } from "./error"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
@@ -12,7 +13,11 @@ export const scan = (source: string): Token[] => {
 		["true", "TRUE"],
 		["false", "FALSE"],
 		["println", "PRINTLN"],
+		["print", "PRINT"],
 		["let", "LET"],
+		["if", "IF"],
+		["else", "ELSE"],
+		["while", "WHILE"],
 	])
 
 
@@ -91,7 +96,13 @@ export const scan = (source: string): Token[] => {
 
 	const string = () => {
 		while (!isAtEnd() && peekNext() !== '"') {
+			if (peekNext() === '\n') {
+				line++
+			}
 			consumeChar()
+		}
+		if (isAtEnd()) {
+			throw new LexError("", { start: start, end: current, lineNumber: line }, "Unterminated string")
 		}
 		let str = source.substring(start + 1, current)
 		consumeChar()
@@ -110,7 +121,24 @@ export const scan = (source: string): Token[] => {
 			case '+': addToken("PLUS"); break;
 			case '-': addToken("MINUS"); break;
 			case '*': addToken("STAR"); break;
-			case '/': addToken("SLASH"); break;
+			case '/': {
+				if (peekNext() === '/') {
+					consumeChar()
+					addToken("SLASHSLASH")
+				} else {
+					addToken("SLASH")
+				}
+				break
+			}
+			case '!': {
+				if (peekNext() === '=') {
+					consumeChar()
+					addToken("BANGEQUAL")
+				} else {
+					addToken("BANG")
+				}
+				break
+			}
 			case ';': {
 				if (peekNext() === ';') {
 					comment()

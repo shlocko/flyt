@@ -4,6 +4,7 @@ import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
 import type { Stmt } from "./statement"
+import { Environment } from "./environment"
 
 export const parse = (source: Token[]) => {
 	let current = 0
@@ -92,13 +93,23 @@ export const parse = (source: Token[]) => {
 	}
 
 	const factor = (): Expr => {
-		let expr: Expr = primary()
-		while (matchNext("STAR", "SLASH")) {
+		let expr: Expr = unary()
+		while (matchNext("STAR", "SLASH", "SLASHSLASH")) {
 			let operator = previous()
-			let right = primary()
+			let right = unary()
 			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
 		}
 		return expr
+	}
+
+	const unary = (): Expr => {
+		if (matchNext("BANG", "MINUS")) {
+			let operator = previous()
+			let expr: Expr = unary()
+			return { type: "UnaryExpr", operator: operator, right: expr }
+		} else {
+			return primary()
+		}
 	}
 
 	const primary = (): Expr => {
@@ -107,8 +118,15 @@ export const parse = (source: Token[]) => {
 			case "NUMBER": return { type: "LiteralExpr", value: token.literal }
 			case "TRUE": return { type: "LiteralExpr", value: true }
 			case "FALSE": return { type: "LiteralExpr", value: false }
-			case "IDENTIFIER": return { type: "VariableExpr", name: previous() }
+			case "IDENTIFIER": {
+				return { type: "VariableExpr", name: previous() }
+			}
 			case "STRING": return { type: "LiteralExpr", value: token.literal }
+			case "LEFTPAREN": {
+				let expr: Expr = expression()
+				consumeCheck("RIGHTPAREN", "Expected ')' after grouping expression")
+				return { type: "GroupingExpr", expr: expr }
+			}
 		}
 		throw new ParseError(token, "Invalid token.")
 	}
@@ -116,13 +134,55 @@ export const parse = (source: Token[]) => {
 	const statement = (): Stmt => {
 		let token = consumeNextToken()
 		switch (token.type) {
-			case "PRINTLN": return printStatement()
+			case "PRINTLN": return printlnStatement()
+			case "PRINT": return printStatement()
 			case "LET": return letStatement()
 			case "LEFTBRACE": return blockStatement()
+			case "IF": return ifStatement()
+			case "WHILE": return whileStatement()
 		}
 		current-- // we need the previously consumed token for the expression statement, so we will step back, hope this doesn't bite me later
 		return { type: "ExprStmt", expr: expression() }
 		throw new ParseError(token, "Expected statement.")
+	}
+
+	const whileStatement = (): Stmt => {
+		let condition = expression()
+		let doBlock: Stmt
+		if (consumeCheck("LEFTBRACE", "Expected a block.")) {
+			doBlock = blockStatement()
+		}
+		return { type: "WhileStmt", condition: condition, doBlock: doBlock! }
+	}
+
+	const ifStatement = (): Stmt => {
+		let condition = expression()
+		let ifSt: Stmt
+		let elseStmt = undefined
+		if (consumeCheck("LEFTBRACE", "Expected a block.")) {
+			ifSt = blockStatement()
+			if (matchNext("ELSE")) {
+				if (matchNext("LEFTBRACE", "IF")) {
+					let prev = previous()
+					if (prev.type === "LEFTBRACE") {
+						elseStmt = blockStatement()
+					} else if (prev.type === "IF") {
+						elseStmt = ifStatement()
+					} else {
+						throw new ParseError(prev, "Expected 'if' or block.")
+					}
+				}
+			}
+		}
+		return { type: "IfStmt", condition: condition, thenBlock: ifSt!, elseBlock: elseStmt }
+	}
+
+	const printlnStatement = (): Stmt => {
+		consumeCheck("LEFTPAREN", "Expected '(' after 'print'.")
+		let expr = expression()
+		consumeCheck("RIGHTPAREN", "Expected ')' after expression.")
+		return { type: "PrintlnStmt", expr: expr }
+
 	}
 
 	const printStatement = (): Stmt => {

@@ -6,7 +6,7 @@ import type { Stmt } from "./statement";
 export const interpret = (stmts: Stmt[]) => {
 	let environment = new Environment()
 
-	const evaluate = (expr: Expr) => {
+	const evaluate = (expr: Expr): any => {
 		switch (expr.type) {
 			case "LiteralExpr": return expr.value;
 			case "BinaryExpr": {
@@ -15,6 +15,7 @@ export const interpret = (stmts: Stmt[]) => {
 				switch (expr.operator.type) {
 					case "MINUS": return left - right
 					case "SLASH": return left / right
+					case "SLASHSLASH": return Math.floor(left / right)
 					case "STAR": return left * right
 					case "PLUS": {
 						if (typeof left === "string" && typeof right === "string") {
@@ -61,12 +62,28 @@ export const interpret = (stmts: Stmt[]) => {
 				if (environment.has(expr.name)) {
 					return environment.get(expr.name)
 				}
-				return new RuntimeError(expr.name, "Variable '" + expr.name.lexeme + "' is not defined.")
+				throw new RuntimeError(expr.name, "Name '" + expr.name.lexeme + "' is not defined.")
 			}
 			case "AssignExpr": {
 				if (environment.has(expr.name)) {
 					environment.assign(expr.name, evaluate(expr.value))
 					return environment.get(expr.name)
+				}
+				throw new RuntimeError(expr.name, "Name '" + expr.name.lexeme + "' does not exist.")
+			}
+			case "GroupingExpr": {
+				return evaluate(expr.expr)
+			}
+			case "UnaryExpr": {
+				if (expr.operator.lexeme === "-") {
+					let val: any = evaluate(expr.right)
+					if (typeof val === "number") {
+						return -val
+					} else {
+						throw new RuntimeError(expr.operator, "Cannot negate non-number: '" + val + "'.")
+					}
+				} else if (expr.operator.lexeme === "!") {
+					return !isTruthy(evaluate(expr.right))
 				}
 			}
 		}
@@ -74,9 +91,13 @@ export const interpret = (stmts: Stmt[]) => {
 
 	const execute = (stmt: Stmt) => {
 		switch (stmt.type) {
-			case "PrintStmt": {
+			case "PrintlnStmt": {
 				console.log(evaluate(stmt.expr))
-				break;
+				break
+			}
+			case "PrintStmt": {
+				process.stdout.write(String(evaluate(stmt.expr)))
+				break
 			}
 			case "ExprStmt": {
 				evaluate(stmt.expr)
@@ -94,6 +115,20 @@ export const interpret = (stmts: Stmt[]) => {
 				}
 				environment = prevEnv
 				break
+			}
+			case "IfStmt": {
+				let cond = evaluate(stmt.condition)
+				if (isTruthy(cond)) {
+					execute(stmt.thenBlock)
+				} else if (stmt.elseBlock) {
+					execute(stmt.elseBlock)
+				}
+				break
+			}
+			case "WhileStmt": {
+				while (isTruthy(evaluate(stmt.condition))) {
+					execute(stmt.doBlock)
+				}
 			}
 		}
 	}
