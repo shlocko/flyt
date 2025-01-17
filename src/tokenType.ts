@@ -12,6 +12,7 @@ export type TokenType = // Single Character tokens
 	| "LESSTHAN"
 	| "GREATERTHAN"
 	| "BANG"
+	| "COMMA"
 	// Two Character Tokens
 	| "EQUALEQUAL"
 	| "SEMISEMI"
@@ -26,9 +27,9 @@ export type TokenType = // Single Character tokens
 	// KEYWORDS
 	| "TRUE"
 	| "FALSE"
-	| "PRINTLN"
-	| "PRINT"
 	| "LET"
 	| "IF"
 	| "ELSE"
 	| "WHILE"
+	| "FN"
+	| "RETURN"

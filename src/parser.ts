@@ -1,9 +1,8 @@
-import { peek } from "bun"
 import type { Expr, VariableExpr } from "./expression"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
-import type { Stmt } from "./statement"
+import type { BlockStmt, Stmt } from "./statement"
 import { Environment } from "./environment"
 
 export const parse = (source: Token[]) => {
@@ -108,8 +107,32 @@ export const parse = (source: Token[]) => {
 			let expr: Expr = unary()
 			return { type: "UnaryExpr", operator: operator, right: expr }
 		} else {
-			return primary()
+			return call()
 		}
+	}
+
+	const call = (): Expr => {
+		let expr = primary()
+		while (true) {
+			if (matchNext("LEFTPAREN")) {
+				expr = finishCall(expr)
+			} else {
+				break
+			}
+		}
+		return expr
+	}
+
+	const finishCall = (callee: Expr): Expr => {
+		let args: Expr[] = []
+		if (peekNext().type !== "RIGHTPAREN") {
+			do {
+				args.push(expression())
+			} while (matchNext("COMMA"))
+		}
+		let paren = consumeCheck("RIGHTPAREN", "Expected ')' after arguments.")
+		return { type: "CallExpr", callee: callee, paren: paren, argumnets: args }
+
 	}
 
 	const primary = (): Expr => {
@@ -134,16 +157,30 @@ export const parse = (source: Token[]) => {
 	const statement = (): Stmt => {
 		let token = consumeNextToken()
 		switch (token.type) {
-			case "PRINTLN": return printlnStatement()
-			case "PRINT": return printStatement()
 			case "LET": return letStatement()
 			case "LEFTBRACE": return blockStatement()
 			case "IF": return ifStatement()
 			case "WHILE": return whileStatement()
+			case "FN": return functionStatement("function")
 		}
 		current-- // we need the previously consumed token for the expression statement, so we will step back, hope this doesn't bite me later
 		return { type: "ExprStmt", expr: expression() }
 		throw new ParseError(token, "Expected statement.")
+	}
+
+	const functionStatement = (fnType: string): Stmt => {
+		let name = consumeCheck("IDENTIFIER", "Expected " + fnType + " name.")
+		consumeCheck("LEFTPAREN", "Expected '(' after " + fnType + " name.")
+		let params: Token[] = []
+		if (!(peekNext().type === "RIGHTPAREN")) {
+			do {
+				params.push(consumeCheck("IDENTIFIER", "Expected identifier as " + fnType + " parameter."))
+			} while (matchNext("COMMA"))
+		}
+		consumeCheck("RIGHTPAREN", "Expected ')' after parameters.")
+		consumeCheck("LEFTBRACE", "Expected '{' before body")
+		let body = blockStatement()
+		return { type: "FnStmt", name: name, params: params, body: body as BlockStmt }
 	}
 
 	const whileStatement = (): Stmt => {
@@ -177,21 +214,6 @@ export const parse = (source: Token[]) => {
 		return { type: "IfStmt", condition: condition, thenBlock: ifSt!, elseBlock: elseStmt }
 	}
 
-	const printlnStatement = (): Stmt => {
-		consumeCheck("LEFTPAREN", "Expected '(' after 'print'.")
-		let expr = expression()
-		consumeCheck("RIGHTPAREN", "Expected ')' after expression.")
-		return { type: "PrintlnStmt", expr: expr }
-
-	}
-
-	const printStatement = (): Stmt => {
-		consumeCheck("LEFTPAREN", "Expected '(' after 'print'.")
-		let expr = expression()
-		consumeCheck("RIGHTPAREN", "Expected ')' after expression.")
-		return { type: "PrintStmt", expr: expr }
-
-	}
 
 	const letStatement = (): Stmt => {
 		let name = consumeCheck("IDENTIFIER", "Expected indentifier after 'let'.");

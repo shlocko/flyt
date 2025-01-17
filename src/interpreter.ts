@@ -1,10 +1,34 @@
-import { Environment } from "./environment";
+import { Environment } from "./environment"
 import { RuntimeError } from "./error";
 import type { Expr } from "./expression";
+import type { funct } from "./function";
 import type { Stmt } from "./statement";
+import type { Token } from "./token";
 
 export const interpret = (stmts: Stmt[]) => {
-	let environment = new Environment()
+	let globals = new Environment()
+	let environment = globals
+
+	// Clock function
+	globals.define({ type: "IDENTIFIER", line: -1, lexeme: "clock", literal: "clock" }, {
+		type: "function", arity: 0, call: () => {
+			return (new Date().getTime())
+		}
+	} as funct)
+
+	// Print function
+	globals.define({ type: "IDENTIFIER", line: -1, lexeme: "print", literal: "print" }, {
+		type: "function", arity: 1, call: (args: any) => {
+			process.stdout.write(String(args[0]))
+		}
+	} as funct)
+
+	// Println function
+	globals.define({ type: "IDENTIFIER", line: -1, lexeme: "println", literal: "println" }, {
+		type: "function", arity: 1, call: (arg: any) => {
+			console.log(arg[0])
+		}
+	} as funct)
 
 	const evaluate = (expr: Expr): any => {
 		switch (expr.type) {
@@ -85,35 +109,42 @@ export const interpret = (stmts: Stmt[]) => {
 				} else if (expr.operator.lexeme === "!") {
 					return !isTruthy(evaluate(expr.right))
 				}
+				break
+			}
+			case "CallExpr": {
+				let callee = evaluate(expr.callee) as funct
+				let args = []
+				for (let arg of expr.argumnets) {
+					args.push(evaluate(arg))
+				}
+				if ((callee.type === "function" || callee.type === "method")) {
+					if (args.length === callee.arity) {
+						return callee.call(args)
+					} else {
+						throw new RuntimeError(expr.paren, "Incorrect number of arguments. Expected " + callee.arity + ", got " + args.length + ".")
+					}
+				}
+				// Call function, TODO
 			}
 		}
 	}
 
 	const execute = (stmt: Stmt) => {
 		switch (stmt.type) {
-			case "PrintlnStmt": {
-				console.log(evaluate(stmt.expr))
-				break
-			}
-			case "PrintStmt": {
-				process.stdout.write(String(evaluate(stmt.expr)))
-				break
-			}
 			case "ExprStmt": {
 				evaluate(stmt.expr)
 				break;
 			}
 			case "LetStmt": {
-				environment.define(stmt.name, evaluate(stmt.initializer))
+				if (stmt.initializer || stmt.initializer == 0) {
+					environment.define(stmt.name, evaluate(stmt.initializer))
+				} else {
+					environment.define(stmt.name, undefined)
+				}
 				break
 			}
 			case "BlockStmt": {
-				let prevEnv = environment
-				environment = new Environment(environment)
-				for (let st of stmt.stmts) {
-					execute(st)
-				}
-				environment = prevEnv
+				executeBlock(stmt.stmts, new Environment(environment))
 				break
 			}
 			case "IfStmt": {
@@ -129,8 +160,36 @@ export const interpret = (stmts: Stmt[]) => {
 				while (isTruthy(evaluate(stmt.condition))) {
 					execute(stmt.doBlock)
 				}
+				break
 			}
+			case "FnStmt": {
+				//console.log(JSON.stringify(stmt.body.stmts))
+				environment.define(stmt.name, {
+					type: "function",
+					arity: stmt.params.length,
+					call: (args: Expr[]) => {
+						let prevEnv = environment
+						environment = new Environment(globals)
+						for (let i = 0; i < stmt.params.length; i++) {
+							environment.define(stmt.params[i], args[i])
+						}
+						execute(stmt.body)
+						environment = prevEnv
+					}
+				} as funct)
+				break
+			}
+
 		}
+	}
+
+	const executeBlock = (stmts: Stmt[], env: Environment) => {
+		let prevEnv = environment
+		environment = env
+		for (let st of stmts) {
+			execute(st)
+		}
+		environment = prevEnv
 	}
 
 	const isTruthy = (value: any) => {

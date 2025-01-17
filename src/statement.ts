@@ -8,6 +8,7 @@ export type LetStmt = { type: "LetStmt", name: Token, initializer?: any }
 export type BlockStmt = { type: "BlockStmt", stmts: Stmt[] }
 export type IfStmt = { type: "IfStmt", condition: Expr, thenBlock: Stmt, elseBlock: Stmt | undefined }
 export type WhileStmt = { type: "WhileStmt", condition: Expr, doBlock: Stmt }
+export type FnStmt = { type: "FnStmt", name: Token, params: Token[], body: BlockStmt }
 
 
 export type Stmt =
@@ -18,3 +19,4 @@ export type Stmt =
 	| BlockStmt
 	| IfStmt
 	| WhileStmt
+	| FnStmt

@@ -6,6 +6,7 @@ export type VariableExpr = { type: "VariableExpr", name: Token }
 export type AssignExpr = { type: "AssignExpr", name: Token, value: Expr }
 export type GroupingExpr = { type: "GroupingExpr", expr: Expr }
 export type UnaryExpr = { type: "UnaryExpr", right: Expr, operator: Token }
+export type CallExpr = { type: "CallExpr", callee: Expr, paren: Token, argumnets: Expr[] }
 
 
 export type Expr =
@@ -15,3 +16,4 @@ export type Expr =
 	| AssignExpr
 	| GroupingExpr
 	| UnaryExpr
+	| CallExpr

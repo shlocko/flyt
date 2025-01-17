@@ -13,7 +13,7 @@ export class Environment {
 	}
 	get(name: Token): any {
 		let value = this.env.get(name.lexeme)
-		if (!value && this.enclosing) {
+		if (value === undefined && this.enclosing) {
 			return this.enclosing.get(name)
 		}
 		return value

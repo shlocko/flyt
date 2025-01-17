@@ -1,4 +1,3 @@
-import { peek } from "bun"
 import { LexError } from "./error"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
@@ -12,12 +11,12 @@ export const scan = (source: string): Token[] => {
 	const keywords = new Map<string, TokenType>([
 		["true", "TRUE"],
 		["false", "FALSE"],
-		["println", "PRINTLN"],
-		["print", "PRINT"],
 		["let", "LET"],
 		["if", "IF"],
 		["else", "ELSE"],
 		["while", "WHILE"],
+		["fn", "FN"],
+		["return", "RETURN"]
 	])
 
 
@@ -121,6 +120,7 @@ export const scan = (source: string): Token[] => {
 			case '+': addToken("PLUS"); break;
 			case '-': addToken("MINUS"); break;
 			case '*': addToken("STAR"); break;
+			case ',': addToken("COMMA"); break;
 			case '/': {
 				if (peekNext() === '/') {
 					consumeChar()
