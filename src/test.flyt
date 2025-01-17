@@ -1,8 +1,12 @@
-fn count(a){
-	if a > 0 {
-		count(a-1)
-	}
-	println(a)
+fn fib(n) {
+	;;println(n)
+		if n < 2 {
+			return n
+		}
+	return fib(n - 1) + fib(n - 2)
 }
-count(3)
 
+let before = clock()
+println(fib(40))
+let after = clock()
+println(after - before)

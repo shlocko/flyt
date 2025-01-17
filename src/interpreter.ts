@@ -124,16 +124,14 @@ export const interpret = (stmts: Stmt[]) => {
 						throw new RuntimeError(expr.paren, "Incorrect number of arguments. Expected " + callee.arity + ", got " + args.length + ".")
 					}
 				}
-				// Call function, TODO
 			}
 		}
 	}
 
-	const execute = (stmt: Stmt) => {
+	const execute = (stmt: Stmt): any => {
 		switch (stmt.type) {
 			case "ExprStmt": {
-				evaluate(stmt.expr)
-				break;
+				return evaluate(stmt.expr)
 			}
 			case "LetStmt": {
 				if (stmt.initializer || stmt.initializer == 0) {
@@ -141,11 +139,11 @@ export const interpret = (stmts: Stmt[]) => {
 				} else {
 					environment.define(stmt.name, undefined)
 				}
-				break
+				return undefined
 			}
 			case "BlockStmt": {
-				executeBlock(stmt.stmts, new Environment(environment))
-				break
+				return executeBlock(stmt.stmts, new Environment(environment))
+
 			}
 			case "IfStmt": {
 				let cond = evaluate(stmt.condition)
@@ -154,13 +152,13 @@ export const interpret = (stmts: Stmt[]) => {
 				} else if (stmt.elseBlock) {
 					execute(stmt.elseBlock)
 				}
-				break
+				return undefined
 			}
 			case "WhileStmt": {
 				while (isTruthy(evaluate(stmt.condition))) {
 					execute(stmt.doBlock)
 				}
-				break
+				return undefined
 			}
 			case "FnStmt": {
 				//console.log(JSON.stringify(stmt.body.stmts))
@@ -168,16 +166,25 @@ export const interpret = (stmts: Stmt[]) => {
 					type: "function",
 					arity: stmt.params.length,
 					call: (args: Expr[]) => {
+						let returnValue = undefined
 						let prevEnv = environment
 						environment = new Environment(globals)
 						for (let i = 0; i < stmt.params.length; i++) {
 							environment.define(stmt.params[i], args[i])
 						}
-						execute(stmt.body)
-						environment = prevEnv
+						try {
+							returnValue = executeBlock(stmt.body.stmts, environment)
+						} catch (returnValue) {
+							environment = prevEnv
+							return returnValue
+						}
 					}
 				} as funct)
 				break
+			}
+			case "ReturnStmt": {
+				let value = evaluate(stmt.expr)
+				throw value
 			}
 
 		}
@@ -186,10 +193,17 @@ export const interpret = (stmts: Stmt[]) => {
 	const executeBlock = (stmts: Stmt[], env: Environment) => {
 		let prevEnv = environment
 		environment = env
+		let returnValue = undefined
 		for (let st of stmts) {
-			execute(st)
+			if (st.type === "ReturnStmt") {
+				returnValue = execute(st)
+				break
+			} else {
+				execute(st)
+			}
 		}
 		environment = prevEnv
+		return returnValue
 	}
 
 	const isTruthy = (value: any) => {

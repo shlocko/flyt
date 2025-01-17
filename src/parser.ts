@@ -162,10 +162,16 @@ export const parse = (source: Token[]) => {
 			case "IF": return ifStatement()
 			case "WHILE": return whileStatement()
 			case "FN": return functionStatement("function")
+			case "RETURN": return returnStatement()
 		}
 		current-- // we need the previously consumed token for the expression statement, so we will step back, hope this doesn't bite me later
 		return { type: "ExprStmt", expr: expression() }
 		throw new ParseError(token, "Expected statement.")
+	}
+
+	const returnStatement = (): Stmt => {
+		let expr = expression()
+		return { type: "ReturnStmt", expr: expr }
 	}
 
 	const functionStatement = (fnType: string): Stmt => {
