@@ -13,21 +13,24 @@ export const interpret = (stmts: Stmt[]) => {
 	globals.define({ type: "IDENTIFIER", line: -1, lexeme: "clock", literal: "clock" }, {
 		type: "function", arity: 0, call: () => {
 			return (new Date().getTime())
-		}
+		},
+		closure: globals
 	} as funct)
 
 	// Print function
 	globals.define({ type: "IDENTIFIER", line: -1, lexeme: "print", literal: "print" }, {
 		type: "function", arity: 1, call: (args: any) => {
 			process.stdout.write(String(args[0]))
-		}
+		},
+		closure: globals
 	} as funct)
 
 	// Println function
 	globals.define({ type: "IDENTIFIER", line: -1, lexeme: "println", literal: "println" }, {
 		type: "function", arity: 1, call: (arg: any) => {
 			console.log(arg[0])
-		}
+		},
+		closure: globals
 	} as funct)
 
 	const evaluate = (expr: Expr): any => {
@@ -112,14 +115,17 @@ export const interpret = (stmts: Stmt[]) => {
 				break
 			}
 			case "CallExpr": {
+
 				let callee = evaluate(expr.callee) as funct
+				if (!callee.closure || !callee.call || !callee.type) throw new RuntimeError(expr.paren, "Invalid call target")
 				let args = []
 				for (let arg of expr.argumnets) {
 					args.push(evaluate(arg))
 				}
 				if ((callee.type === "function" || callee.type === "method")) {
 					if (args.length === callee.arity) {
-						return callee.call(args)
+						//console.log(callee.closure)
+						return callee.call(args, callee.closure)
 					} else {
 						throw new RuntimeError(expr.paren, "Incorrect number of arguments. Expected " + callee.arity + ", got " + args.length + ".")
 					}
@@ -162,13 +168,14 @@ export const interpret = (stmts: Stmt[]) => {
 			}
 			case "FnStmt": {
 				//console.log(JSON.stringify(stmt.body.stmts))
+				console.log(environment)
 				environment.define(stmt.name, {
 					type: "function",
 					arity: stmt.params.length,
-					call: (args: Expr[]) => {
+					call: (args: Expr[], closure: Environment) => {
 						let returnValue = undefined
 						let prevEnv = environment
-						environment = new Environment(globals)
+						environment = new Environment(closure)
 						for (let i = 0; i < stmt.params.length; i++) {
 							environment.define(stmt.params[i], args[i])
 						}
@@ -178,7 +185,8 @@ export const interpret = (stmts: Stmt[]) => {
 							environment = prevEnv
 							return returnValue
 						}
-					}
+					},
+					closure: environment
 				} as funct)
 				break
 			}

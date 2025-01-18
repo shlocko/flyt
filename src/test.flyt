@@ -1,12 +1,13 @@
-fn fib(n) {
-	;;println(n)
-		if n < 2 {
-			return n
-		}
-	return fib(n - 1) + fib(n - 2)
+fn makeCounter() {
+  let i = 0
+  fn count() {
+    i = i + 1
+    println(i)
+  }
+
+  return count
 }
 
-let before = clock()
-println(fib(40))
-let after = clock()
-println(after - before)
+let counter = makeCounter()
+counter() ;; "1".
+counter() ;; "2".
