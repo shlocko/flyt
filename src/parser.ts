@@ -234,12 +234,7 @@ export const parse = (source: Token[]) => {
 		let name = consumeCheck("IDENTIFIER", "Expected indentifier after 'let'.");
 		let initializer = null
 		if (matchNext("EQUAL")) {
-			if (peekNext().type === "FN") {
-				consumeNextToken()
-				initializer = functionStatement("function")
-			} else {
-				initializer = expression()
-			}
+			initializer = expression()
 			return { type: "LetStmt", name: name, initializer: initializer }
 		}
 		return { type: "LetStmt", name: name }

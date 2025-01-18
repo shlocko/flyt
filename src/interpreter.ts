@@ -149,11 +149,7 @@ export const interpret = (stmts: Stmt[]) => {
 			}
 			case "LetStmt": {
 				if (stmt.initializer || stmt.initializer == 0) {
-					if (stmt.initializer.type === "FnStmt") {
-						environment.define(stmt.name, executeFnStmt(stmt.initializer))
-					} else {
-						environment.define(stmt.name, evaluate(stmt.initializer))
-					}
+					environment.define(stmt.name, evaluate(stmt.initializer))
 				} else {
 					environment.define(stmt.name, undefined)
 				}
