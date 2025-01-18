@@ -205,6 +205,7 @@ export const interpret = (stmts: Stmt[]) => {
 					environment = prevEnv
 					return returnValue
 				}
+				environment = prevEnv
 			},
 			closure: environment
 		} as funct

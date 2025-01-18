@@ -1,7 +1,11 @@
-fn printFromOther(function){
-	println(function())
-}
+let a = "global"
+{
+  fn showA() {
+    println(a)
+  }
 
-printFromOther(fn(){
-	return "From an anonymous function!"
-})
+  showA()
+  let a = "block"
+  showA()
+  println(a)
+}
