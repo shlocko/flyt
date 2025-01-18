@@ -8,7 +8,7 @@ export type AssignExpr = { type: "AssignExpr", name: Token, value: Expr }
 export type GroupingExpr = { type: "GroupingExpr", expr: Expr }
 export type UnaryExpr = { type: "UnaryExpr", right: Expr, operator: Token }
 export type CallExpr = { type: "CallExpr", callee: Expr, paren: Token, argumnets: Expr[] }
-export type StmtExpr = { type: "StmtExpr", stmt: Stmt }
+export type StmtExpr = { type: "StmtExpr", name: Token, stmt: Stmt }
 
 
 export type Expr =

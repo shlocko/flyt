@@ -137,6 +137,7 @@ export const interpret = (stmts: Stmt[]) => {
 				if (expr.stmt.type === "FnStmt") {
 					return executeFnStmt(expr.stmt)
 				}
+				throw new RuntimeError(expr.name, "Invalid statement expression.")
 			}
 		}
 	}
