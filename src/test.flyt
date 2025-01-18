@@ -1,13 +1,7 @@
-fn makeCounter() {
-  let i = 0
-  fn count() {
-    i = i + 1
-    println(i)
-  }
-
-  return count
+fn printFromOther(function){
+	println(function())
 }
 
-let counter = makeCounter()
-counter() ;; "1".
-counter() ;; "2".
+printFromOther(fn(){
+	return "From an anonymous function!"
+})

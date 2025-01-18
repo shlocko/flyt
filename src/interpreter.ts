@@ -2,10 +2,11 @@ import { Environment } from "./environment"
 import { RuntimeError } from "./error";
 import type { Expr } from "./expression";
 import type { funct } from "./function";
-import type { Stmt } from "./statement";
+import type { FnStmt, Stmt } from "./statement";
 import type { Token } from "./token";
 
 export const interpret = (stmts: Stmt[]) => {
+
 	let globals = new Environment()
 	let environment = globals
 
@@ -130,6 +131,12 @@ export const interpret = (stmts: Stmt[]) => {
 						throw new RuntimeError(expr.paren, "Incorrect number of arguments. Expected " + callee.arity + ", got " + args.length + ".")
 					}
 				}
+				break
+			}
+			case "StmtExpr": {
+				if (expr.stmt.type === "FnStmt") {
+					return executeFnStmt(expr.stmt)
+				}
 			}
 		}
 	}
@@ -141,7 +148,11 @@ export const interpret = (stmts: Stmt[]) => {
 			}
 			case "LetStmt": {
 				if (stmt.initializer || stmt.initializer == 0) {
-					environment.define(stmt.name, evaluate(stmt.initializer))
+					if (stmt.initializer.type === "FnStmt") {
+						environment.define(stmt.name, executeFnStmt(stmt.initializer))
+					} else {
+						environment.define(stmt.name, evaluate(stmt.initializer))
+					}
 				} else {
 					environment.define(stmt.name, undefined)
 				}
@@ -168,27 +179,9 @@ export const interpret = (stmts: Stmt[]) => {
 			}
 			case "FnStmt": {
 				//console.log(JSON.stringify(stmt.body.stmts))
-				console.log(environment)
-				environment.define(stmt.name, {
-					type: "function",
-					arity: stmt.params.length,
-					call: (args: Expr[], closure: Environment) => {
-						let returnValue = undefined
-						let prevEnv = environment
-						environment = new Environment(closure)
-						for (let i = 0; i < stmt.params.length; i++) {
-							environment.define(stmt.params[i], args[i])
-						}
-						try {
-							returnValue = executeBlock(stmt.body.stmts, environment)
-						} catch (returnValue) {
-							environment = prevEnv
-							return returnValue
-						}
-					},
-					closure: environment
-				} as funct)
-				break
+				//console.log(environment)
+				executeFnStmt(stmt as FnStmt)
+				return undefined
 			}
 			case "ReturnStmt": {
 				let value = evaluate(stmt.expr)
@@ -196,6 +189,30 @@ export const interpret = (stmts: Stmt[]) => {
 			}
 
 		}
+	}
+
+	const executeFnStmt = (stmt: FnStmt) => {
+		let func = {
+			type: "function",
+			arity: stmt.params.length,
+			call: (args: Expr[], closure: Environment) => {
+				let returnValue = undefined
+				let prevEnv = environment
+				environment = new Environment(closure)
+				for (let i = 0; i < stmt.params.length; i++) {
+					environment.define(stmt.params[i], args[i])
+				}
+				try {
+					returnValue = executeBlock(stmt.body.stmts, environment)
+				} catch (returnValue) {
+					environment = prevEnv
+					return returnValue
+				}
+			},
+			closure: environment
+		} as funct
+		environment.define(stmt.name, func)
+		return func
 	}
 
 	const executeBlock = (stmts: Stmt[], env: Environment) => {

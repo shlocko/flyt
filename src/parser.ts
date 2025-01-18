@@ -2,8 +2,9 @@ import type { Expr, VariableExpr } from "./expression"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
-import type { BlockStmt, Stmt } from "./statement"
+import type { BlockStmt, FnStmt, Stmt } from "./statement"
 import { Environment } from "./environment"
+import { anonName } from "./anonymousName"
 
 export const parse = (source: Token[]) => {
 	let current = 0
@@ -150,6 +151,9 @@ export const parse = (source: Token[]) => {
 				consumeCheck("RIGHTPAREN", "Expected ')' after grouping expression")
 				return { type: "GroupingExpr", expr: expr }
 			}
+			case "FN": {
+				return { type: "StmtExpr", stmt: functionStatement("function") }
+			}
 		}
 		throw new ParseError(token, "Invalid token.")
 	}
@@ -175,8 +179,13 @@ export const parse = (source: Token[]) => {
 	}
 
 	const functionStatement = (fnType: string): Stmt => {
-		let name = consumeCheck("IDENTIFIER", "Expected " + fnType + " name.")
-		consumeCheck("LEFTPAREN", "Expected '(' after " + fnType + " name.")
+		let token = consumeNextToken()
+		let name = undefined
+		//consumeCheck("LEFTPAREN", "Expected '(' after " + fnType + " name.")
+		if (token.type === "IDENTIFIER") {
+			name = token
+			consumeCheck("LEFTPAREN", "Expected '(' after function name.")
+		} else if (token.type !== "LEFTPAREN") throw new ParseError(token, "Expected '(' after anonymous function declaration.")
 		let params: Token[] = []
 		if (!(peekNext().type === "RIGHTPAREN")) {
 			do {
@@ -186,7 +195,7 @@ export const parse = (source: Token[]) => {
 		consumeCheck("RIGHTPAREN", "Expected ')' after parameters.")
 		consumeCheck("LEFTBRACE", "Expected '{' before body")
 		let body = blockStatement()
-		return { type: "FnStmt", name: name, params: params, body: body as BlockStmt }
+		return { type: "FnStmt", name: name ? name : { line: token.line, type: "IDENTIFIER", lexeme: String(anonName()), literal: undefined } as Token, params: params, body: body as BlockStmt }
 	}
 
 	const whileStatement = (): Stmt => {
@@ -225,7 +234,12 @@ export const parse = (source: Token[]) => {
 		let name = consumeCheck("IDENTIFIER", "Expected indentifier after 'let'.");
 		let initializer = null
 		if (matchNext("EQUAL")) {
-			initializer = expression()
+			if (peekNext().type === "FN") {
+				consumeNextToken()
+				initializer = functionStatement("function")
+			} else {
+				initializer = expression()
+			}
 			return { type: "LetStmt", name: name, initializer: initializer }
 		}
 		return { type: "LetStmt", name: name }
