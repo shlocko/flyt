@@ -152,7 +152,7 @@ export const parse = (source: Token[]) => {
 				return { type: "GroupingExpr", expr: expr }
 			}
 			case "FN": {
-				return { type: "StmtExpr", name: token stmt: functionStatement("function") }
+				return { type: "StmtExpr", name: token, stmt: functionStatement("function") }
 			}
 		}
 		throw new ParseError(token, "Invalid token.")
