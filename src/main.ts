@@ -4,6 +4,7 @@ import { scan } from "./scanner";
 import { parse } from "./parser";
 import { interpret } from "./interpreter";
 import { LexError, ParseError, RuntimeError } from "./error";
+import { typeCheckAST } from "./typeChecker";
 
 const runFile = (scriptName: string) => {
 	const filePath = path.join(__dirname, scriptName);
@@ -21,7 +22,7 @@ export const run = (source: any) => {
 	let tokens
 	try {
 		tokens = scan(source)
-		return interpret(parse(tokens))
+		return interpret(typeCheckAST(parse(tokens)))
 	} catch (err) {
 		if (err instanceof LexError) {
 			console.error("An error occurred at line " + err.position.lineNumber + ": " + err.message)
