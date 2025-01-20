@@ -13,6 +13,8 @@ export type TokenType = // Single Character tokens
 	| "GREATERTHAN"
 	| "BANG"
 	| "COMMA"
+	| "UNDERSCORE"
+	| "COLON"
 	// Two Character Tokens
 	| "EQUALEQUAL"
 	| "SEMISEMI"
@@ -33,3 +35,8 @@ export type TokenType = // Single Character tokens
 	| "WHILE"
 	| "FN"
 	| "RETURN"
+	// TYPES
+	| "INTTYPE"
+	| "FLOATTYPE"
+	| "STRINGTYPE"
+	| "BOOLTYPE"

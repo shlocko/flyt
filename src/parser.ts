@@ -2,8 +2,7 @@ import type { Expr, VariableExpr } from "./expression"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
-import type { BlockStmt, FnStmt, Stmt } from "./statement"
-import { Environment } from "./environment"
+import type { BlockStmt, Stmt } from "./statement"
 import { anonName } from "./anonymousName"
 
 export const parse = (source: Token[]) => {
@@ -57,17 +56,17 @@ export const parse = (source: Token[]) => {
 		let expr: Expr = equality()
 		if (matchNext("EQUAL")) {
 			let value = assignment()
-			return { type: "AssignExpr", name: (expr as VariableExpr).name, value: value }
+			return { type: "AssignExpr", name: (expr as VariableExpr).name, value: value, valueType: undefined }
 		}
 		return expr
 	}
 
 	const equality = (): Expr => {
 		let expr: Expr = comparison()
-		while (matchNext("EQUALEQUAL")) {
+		while (matchNext("EQUALEQUAL", "BANGEQUAL")) {
 			let operator = previous()
 			let right = equality()
-			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
+			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator, valueType: undefined }
 		}
 		return expr
 	}
@@ -77,7 +76,7 @@ export const parse = (source: Token[]) => {
 		while (matchNext("LESSTHAN", "GREATERTHAN", "LESSEQUAL", "GREATEREQUAL")) {
 			let operator = previous()
 			let right = equality()
-			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
+			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator, valueType: undefined }
 		}
 		return expr
 	}
@@ -87,7 +86,7 @@ export const parse = (source: Token[]) => {
 		while (matchNext("PLUS", "MINUS")) {
 			let operator = previous()
 			let right = factor()
-			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
+			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator, valueType: undefined }
 		}
 		return expr
 	}
@@ -97,7 +96,7 @@ export const parse = (source: Token[]) => {
 		while (matchNext("STAR", "SLASH", "SLASHSLASH")) {
 			let operator = previous()
 			let right = unary()
-			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator }
+			expr = { type: "BinaryExpr", left: expr, right: right, operator: operator, valueType: undefined }
 		}
 		return expr
 	}
@@ -106,7 +105,7 @@ export const parse = (source: Token[]) => {
 		if (matchNext("BANG", "MINUS")) {
 			let operator = previous()
 			let expr: Expr = unary()
-			return { type: "UnaryExpr", operator: operator, right: expr }
+			return { type: "UnaryExpr", operator: operator, right: expr, valueType: undefined }
 		} else {
 			return call()
 		}
@@ -132,27 +131,27 @@ export const parse = (source: Token[]) => {
 			} while (matchNext("COMMA"))
 		}
 		let paren = consumeCheck("RIGHTPAREN", "Expected ')' after arguments.")
-		return { type: "CallExpr", callee: callee, paren: paren, argumnets: args }
+		return { type: "CallExpr", callee: callee, paren: paren, argumnets: args, valueType: undefined }
 
 	}
 
 	const primary = (): Expr => {
 		let token = consumeNextToken()
 		switch (token.type) {
-			case "NUMBER": return { type: "LiteralExpr", value: token.literal }
-			case "TRUE": return { type: "LiteralExpr", value: true }
-			case "FALSE": return { type: "LiteralExpr", value: false }
+			case "NUMBER": return { type: "LiteralExpr", value: token.literal, valueType: undefined }
+			case "TRUE": return { type: "LiteralExpr", value: true, valueType: undefined }
+			case "FALSE": return { type: "LiteralExpr", value: false, valueType: undefined }
 			case "IDENTIFIER": {
-				return { type: "VariableExpr", name: previous() }
+				return { type: "VariableExpr", name: previous(), valueType: undefined }
 			}
-			case "STRING": return { type: "LiteralExpr", value: token.literal }
+			case "STRING": return { type: "LiteralExpr", value: token.literal, valueType: undefined }
 			case "LEFTPAREN": {
 				let expr: Expr = expression()
 				consumeCheck("RIGHTPAREN", "Expected ')' after grouping expression")
-				return { type: "GroupingExpr", expr: expr }
+				return { type: "GroupingExpr", expr: expr, valueType: undefined }
 			}
 			case "FN": {
-				return { type: "StmtExpr", name: token, stmt: functionStatement("function") }
+				return { type: "StmtExpr", name: token, stmt: functionStatement("function"), valueType: undefined }
 			}
 		}
 		throw new ParseError(token, "Invalid token.")

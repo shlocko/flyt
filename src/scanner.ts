@@ -16,7 +16,11 @@ export const scan = (source: string): Token[] => {
 		["else", "ELSE"],
 		["while", "WHILE"],
 		["fn", "FN"],
-		["return", "RETURN"]
+		["return", "RETURN"],
+		["int", "INTTYPE"],
+		["float", "FLOATTYPE"],
+		["string", "STRINGTYPE"],
+		["bool", "BOOLTYPE"],
 	])
 
 
@@ -121,6 +125,8 @@ export const scan = (source: string): Token[] => {
 			case '-': addToken("MINUS"); break;
 			case '*': addToken("STAR"); break;
 			case ',': addToken("COMMA"); break;
+			case '_': addToken("UNDERSCORE"); break;
+			case ':': addToken("COLON"); break;
 			case '/': {
 				if (peekNext() === '/') {
 					consumeChar()

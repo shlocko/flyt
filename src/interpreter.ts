@@ -83,6 +83,12 @@ export const interpret = (stmts: Stmt[]) => {
 						}
 						throw new RuntimeError(expr.operator, "Can only compare values of the same type.")
 					}
+					case "BANGEQUAL": {
+						if (typeof left === typeof right) {
+							return left !== right
+						}
+						throw new RuntimeError(expr.operator, "Can only compore values of the same type.")
+					}
 				}
 				throw new RuntimeError(expr.operator, "Invalid Operator.")
 			}
