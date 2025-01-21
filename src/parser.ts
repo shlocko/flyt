@@ -4,6 +4,7 @@ import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
 import type { BlockStmt, Stmt } from "./statement"
 import { anonName } from "./anonymousName"
+import type { Type } from "./types"
 
 export const parse = (source: Token[]) => {
 	let current = 0
@@ -131,7 +132,7 @@ export const parse = (source: Token[]) => {
 			} while (matchNext("COMMA"))
 		}
 		let paren = consumeCheck("RIGHTPAREN", "Expected ')' after arguments.")
-		return { type: "CallExpr", callee: callee, paren: paren, argumnets: args, valueType: undefined }
+		return { type: "CallExpr", callee: callee, paren: paren, argumnets: args, valueType: { kind: "none" } }
 
 	}
 
@@ -231,12 +232,15 @@ export const parse = (source: Token[]) => {
 
 	const letStatement = (): Stmt => {
 		let name = consumeCheck("IDENTIFIER", "Expected indentifier after 'let'.");
-		let initializer = null
+		let initializer
+		let typeToken
+		if (matchNext("COLON")) {
+			typeToken = consumeNextToken()
+		}
 		if (matchNext("EQUAL")) {
 			initializer = expression()
-			return { type: "LetStmt", name: name, initializer: initializer }
 		}
-		return { type: "LetStmt", name: name }
+		return { type: "LetStmt", name: name, typeToken, initializer }
 
 	}
 

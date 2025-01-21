@@ -8,6 +8,11 @@ import { hasRestParameter } from "typescript";
 export const typeCheckAST = (stmts: Stmt[]) => {
 
 	let scopes: Map<string, Type>[] = []
+	let types: Map<string, Type> = new Map()
+	types.set("string", { kind: "string" })
+	types.set("int", { kind: "int" })
+	types.set("float", { kind: "float" })
+	types.set("bool", { kind: "bool" })
 
 	const isNumericType = (valType: Type): boolean => {
 		return (valType.kind === "int" || valType.kind === "float")
@@ -74,7 +79,29 @@ export const typeCheckAST = (stmts: Stmt[]) => {
 				typeCheckExpr(stmt.expr)
 				break
 			}
-			case "LetStmt": break
+			case "LetStmt": {
+				let valueType = null
+				let initializerType = null
+				if (stmt.typeToken && types.has(stmt.typeToken.lexeme)) {
+					valueType = types.get(stmt.typeToken.lexeme)!
+					stmt.valueType = valueType
+				}
+				if (stmt.initializer) {
+					initializerType = typeCheckExpr(stmt.initializer)
+				}
+				if (initializerType && valueType && initializerType !== valueType) {
+					throw new ParseError(stmt.name, "Invalid assignment type to variable.")
+				}
+				if (!valueType && !initializerType) {
+					throw new ParseError(stmt.name, "Must annotate variable type when cannot be inferred.")
+				}
+				if (!valueType && initializerType) {
+					stmt.valueType = initializerType
+				}
+
+				console.log(stmt.valueType, stmt.typeToken, stmt.initializer)
+				break
+			}
 			case "BlockStmt": {
 				for (let stmt of stmts) {
 					typeCheckStmt(stmt)
@@ -181,8 +208,12 @@ export const typeCheckAST = (stmts: Stmt[]) => {
 				for (let arg of expr.argumnets) {
 					typeCheckExpr(arg)
 				}
-				if (expr.valueType) return expr.valueType
-				else throw new ParseError(expr.paren, "ValueType not assigned in typechecker.")
+				if (expr.valueType) {
+					return expr.valueType
+				}
+				else {
+					throw new ParseError(expr.paren, "ValueType not assigned in typechecker.(CallExpr)")
+				}
 			}
 			case "StmtExpr": {
 				if (expr.stmt.type === "FnStmt") {

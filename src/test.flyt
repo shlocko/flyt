@@ -1,1 +1,2 @@
 println("2"+"2")
+let test: string = 2
