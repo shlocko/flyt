@@ -46,12 +46,7 @@ export const interpret = (stmts: Stmt[]) => {
 					case "SLASHSLASH": return Math.floor(left / right)
 					case "STAR": return left * right
 					case "PLUS": {
-						if (typeof left === "string" && typeof right === "string") {
-							return left + right
-						} else if (typeof left === "number" && typeof right === "number") {
-							return left + right
-						}
-						throw new RuntimeError(expr.operator, "Can not add two values of different types.")
+						return left + right
 					}
 					case "GREATERTHAN": {
 						if (typeof left === "number" && typeof right === "number") {
