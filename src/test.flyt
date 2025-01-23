@@ -1,2 +1,23 @@
-println("2"+"2")
-let test: string = 2
+;;println("2"=="2")
+;;let test = "2"
+let foo: function
+{
+		let a = 7
+		fn test(){
+				return "test"
+		}
+		foo = test
+}
+println(foo())
+if 1 == 2 {
+		println("wrong")
+}else if 2 == 2 {
+		println("right")
+}else{
+		println("oh")
+}
+while true {
+		println("lololool")
+}
+;;test = 2
+;;println(test)

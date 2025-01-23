@@ -2,7 +2,7 @@ import type { Expr, VariableExpr } from "./expression"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
-import type { BlockStmt, Stmt } from "./statement"
+import type { BlockStmt, IfStmt, Stmt } from "./statement"
 import { anonName } from "./anonymousName"
 import type { Type } from "./types"
 
@@ -200,26 +200,26 @@ export const parse = (source: Token[]) => {
 
 	const whileStatement = (): Stmt => {
 		let condition = expression()
-		let doBlock: Stmt
+		let doBlock: BlockStmt
 		if (consumeCheck("LEFTBRACE", "Expected a block.")) {
-			doBlock = blockStatement()
+			doBlock = blockStatement() as BlockStmt
 		}
 		return { type: "WhileStmt", condition: condition, doBlock: doBlock! }
 	}
 
 	const ifStatement = (): Stmt => {
 		let condition = expression()
-		let ifSt: Stmt
-		let elseStmt = undefined
+		let ifSt: BlockStmt
+		let elseStmt: BlockStmt | IfStmt | undefined = undefined
 		if (consumeCheck("LEFTBRACE", "Expected a block.")) {
-			ifSt = blockStatement()
+			ifSt = blockStatement() as BlockStmt
 			if (matchNext("ELSE")) {
 				if (matchNext("LEFTBRACE", "IF")) {
 					let prev = previous()
 					if (prev.type === "LEFTBRACE") {
-						elseStmt = blockStatement()
+						elseStmt = blockStatement() as BlockStmt
 					} else if (prev.type === "IF") {
-						elseStmt = ifStatement()
+						elseStmt = ifStatement() as IfStmt
 					} else {
 						throw new ParseError(prev, "Expected 'if' or block.")
 					}

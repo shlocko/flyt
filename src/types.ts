@@ -1,4 +1,3 @@
-
 export type IntType = { kind: "int" }
 export type FloatType = { kind: "float" }
 export type StringType = { kind: "string" }
