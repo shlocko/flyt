@@ -17,7 +17,7 @@ if 1 == 2 {
 		println("oh")
 }
 while true {
-		println("lololool")
+		println("looplooploop")
 }
 ;;test = 2
 ;;println(test)
