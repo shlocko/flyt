@@ -106,11 +106,7 @@ export const interpret = (stmts: Stmt[]) => {
 			case "UnaryExpr": {
 				if (expr.operator.lexeme === "-") {
 					let val: any = evaluate(expr.right)
-					if (typeof val === "number") {
-						return -val
-					} else {
-						throw new RuntimeError(expr.operator, "Cannot negate non-number: '" + val + "'.")
-					}
+					return -val
 				} else if (expr.operator.lexeme === "!") {
 					return !isTruthy(evaluate(expr.right))
 				}
@@ -119,9 +115,11 @@ export const interpret = (stmts: Stmt[]) => {
 			case "CallExpr": {
 
 				let callee = evaluate(expr.callee) as funct
+				//console.log(callee)
 				if (!callee.closure || !callee.call || !callee.type) throw new RuntimeError(expr.paren, "Invalid call target")
 				let args = []
 				for (let arg of expr.argumnets) {
+					//console.log(arg)
 					args.push(evaluate(arg))
 				}
 				if ((callee.type === "function" || callee.type === "method")) {
@@ -190,6 +188,7 @@ export const interpret = (stmts: Stmt[]) => {
 	}
 
 	const executeFnStmt = (stmt: FnStmt) => {
+		//console.log(stmt)
 		let func = {
 			type: "function",
 			arity: stmt.params.length,
@@ -198,7 +197,7 @@ export const interpret = (stmts: Stmt[]) => {
 				let prevEnv = environment
 				environment = new Environment(closure)
 				for (let i = 0; i < stmt.params.length; i++) {
-					environment.define(stmt.params[i], args[i])
+					environment.define(stmt.params[i].name, args[i])
 				}
 				try {
 					returnValue = executeBlock(stmt.body.stmts, environment)
@@ -211,6 +210,7 @@ export const interpret = (stmts: Stmt[]) => {
 			closure: environment
 		} as funct
 		environment.define(stmt.name, func)
+		//console.log("DONEDONEDONE", '\n', environment)
 		return func
 	}
 
@@ -236,7 +236,9 @@ export const interpret = (stmts: Stmt[]) => {
 		return true
 	}
 
+	//console.log(stmts)
 	for (let stmt of stmts) {
+		//console.log(stmt.type)
 		execute(stmt)
 	}
 }

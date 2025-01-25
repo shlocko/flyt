@@ -22,6 +22,7 @@ export type TokenType = // Single Character tokens
 	| "GREATEREQUAL"
 	| "BANGEQUAL"
 	| "SLASHSLASH"
+	| "RIGHTARROW"
 	// LITERALS
 	| "NUMBER"
 	| "IDENTIFIER"

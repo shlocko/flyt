@@ -122,11 +122,19 @@ export const scan = (source: string): Token[] => {
 			case '{': addToken("LEFTBRACE"); break;
 			case '}': addToken("RIGHTBRACE"); break;
 			case '+': addToken("PLUS"); break;
-			case '-': addToken("MINUS"); break;
 			case '*': addToken("STAR"); break;
 			case ',': addToken("COMMA"); break;
 			case '_': addToken("UNDERSCORE"); break;
 			case ':': addToken("COLON"); break;
+			case '-': {
+				if (peekNext() === '>') {
+					consumeChar()
+					addToken("RIGHTARROW")
+				} else {
+					addToken("MINUS");
+				}
+				break
+			}
 			case '/': {
 				if (peekNext() === '/') {
 					consumeChar()

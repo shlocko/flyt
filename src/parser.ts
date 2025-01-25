@@ -2,9 +2,9 @@ import type { Expr, VariableExpr } from "./expression"
 import type { Token } from "./token"
 import type { TokenType } from "./tokenType"
 import { ParseError } from "./error"
-import type { BlockStmt, IfStmt, Stmt } from "./statement"
+import type { BlockStmt, ExprStmt, IfStmt, Stmt } from "./statement"
 import { anonName } from "./anonymousName"
-import type { Type } from "./types"
+import type { FunctionParameter, Type, TypeToken } from "./types"
 
 export const parse = (source: Token[]) => {
 	let current = 0
@@ -47,6 +47,33 @@ export const parse = (source: Token[]) => {
 
 	const checkNext = (type: TokenType) => {
 		return type == peekNext().type
+	}
+
+	const typeToken = (): TypeToken => {
+		let first = consumeNextToken()
+		switch (first.type) {
+			case "INTTYPE":
+			case "FLOATTYPE":
+			case "STRINGTYPE":
+			case "BOOLTYPE":
+			case "IDENTIFIER": return first
+			case "FN": {
+				consumeCheck("LEFTPAREN", "Expected '(' in function type annotation.")
+				let paramTypeTokens: TypeToken[] = []
+				if (peekNext().type !== "RIGHTPAREN") {
+					do {
+						paramTypeTokens.push(typeToken())
+					} while (matchNext("COMMA"))
+				}
+				consumeCheck("RIGHTPAREN", "Expected ')' after paramater types.")
+				let returnType
+				if (matchNext("RIGHTARROW")) {
+					returnType = typeToken()
+				}
+				return { type: "function", params: paramTypeTokens, return: returnType ? returnType : { type: "none" } }
+			}
+		}
+		throw new ParseError(first, "Expected type.")
 	}
 
 	const expression = (): Expr => {
@@ -117,6 +144,8 @@ export const parse = (source: Token[]) => {
 		while (true) {
 			if (matchNext("LEFTPAREN")) {
 				expr = finishCall(expr)
+
+				//console.log(expr)
 			} else {
 				break
 			}
@@ -169,7 +198,9 @@ export const parse = (source: Token[]) => {
 			case "RETURN": return returnStatement()
 		}
 		current-- // we need the previously consumed token for the expression statement, so we will step back, hope this doesn't bite me later
-		return { type: "ExprStmt", expr: expression() }
+		let expr = expression()
+		let st = { type: "ExprStmt", expr } as ExprStmt
+		return st
 		throw new ParseError(token, "Expected statement.")
 	}
 
@@ -186,16 +217,25 @@ export const parse = (source: Token[]) => {
 			name = token
 			consumeCheck("LEFTPAREN", "Expected '(' after function name.")
 		} else if (token.type !== "LEFTPAREN") throw new ParseError(token, "Expected '(' after anonymous function declaration.")
-		let params: Token[] = []
+		let params: FunctionParameter[] = []
 		if (!(peekNext().type === "RIGHTPAREN")) {
 			do {
-				params.push(consumeCheck("IDENTIFIER", "Expected identifier as " + fnType + " parameter."))
+				let name = consumeCheck("IDENTIFIER", "Expected identifier in ufnction parameter.")
+				consumeCheck("COLON", "Expected ':' after parameter name.")
+				params.push({ name: name, typeToken: typeToken() })
 			} while (matchNext("COMMA"))
 		}
 		consumeCheck("RIGHTPAREN", "Expected ')' after parameters.")
-		consumeCheck("LEFTBRACE", "Expected '{' before body")
+		let returnTypeToken
+		if (matchNext("RIGHTARROW")) {
+
+			let maybeReturnType = typeToken()
+			if (maybeReturnType)
+				returnTypeToken = maybeReturnType
+		}
+		consumeCheck("LEFTBRACE", "Expect '{' before function body.")
 		let body = blockStatement()
-		return { type: "FnStmt", name: name ? name : { line: token.line, type: "IDENTIFIER", lexeme: String(anonName()), literal: undefined } as Token, params: params, body: body as BlockStmt }
+		return { type: "FnStmt", name: name ? name : { line: token.line, type: "IDENTIFIER", lexeme: String(anonName()), literal: undefined } as Token, params: params, body: body as BlockStmt, returnTypeToken, valueType: undefined }
 	}
 
 	const whileStatement = (): Stmt => {
@@ -233,14 +273,14 @@ export const parse = (source: Token[]) => {
 	const letStatement = (): Stmt => {
 		let name = consumeCheck("IDENTIFIER", "Expected indentifier after 'let'.");
 		let initializer
-		let typeToken
+		let maybeTypeToken
 		if (matchNext("COLON")) {
-			typeToken = consumeNextToken()
+			maybeTypeToken = typeToken()
 		}
 		if (matchNext("EQUAL")) {
 			initializer = expression()
 		}
-		return { type: "LetStmt", name: name, typeToken, initializer }
+		return { type: "LetStmt", name: name, typeToken: maybeTypeToken, initializer, valueType: undefined }
 
 	}
 
@@ -253,8 +293,8 @@ export const parse = (source: Token[]) => {
 	}
 
 	while (!isAtEnd()) {
-		statements.push(statement())
+		let st = statement()
+		statements.push(st)
 	}
-
 	return statements
 }
